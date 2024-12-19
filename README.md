@@ -1,0 +1,1 @@
+# aminosh.xyz
