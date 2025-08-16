@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Floating Containers Control Panel</title>
+    <title>Floating Containers - Manual Refresh</title>
     <style>
         :root {
             --primary: #00f7ff;
@@ -40,6 +40,7 @@
             box-shadow: 0 0 20px rgba(0, 247, 255, 0.2),
                         0 0 40px rgba(123, 45, 255, 0.1);
             margin-bottom: 30px;
+            z-index: 10;
         }
         
         h1 {
@@ -119,6 +120,20 @@
             animation: float 6s ease-in-out infinite;
         }
         
+        .floating-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 80px;
+            width: auto;
+            height: auto;
+            z-index: 100;
+            animation: none;
+            border-radius: 0;
+            border: none;
+        }
+        
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
@@ -166,6 +181,10 @@
             height: 200px;
             transition: height 0.5s ease;
             position: relative;
+        }
+        
+        .container-content.fullscreen {
+            height: calc(100% - 45px);
         }
         
         .container-content iframe {
@@ -227,6 +246,51 @@
             bottom: 10%;
             right: 15%;
         }
+        
+        .fullscreen-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: rgba(10, 10, 26, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            z-index: 101;
+            backdrop-filter: blur(5px);
+            border-top: 1px solid rgba(0, 247, 255, 0.2);
+            display: none;
+        }
+        
+        .fullscreen-controls button {
+            width: auto;
+            min-width: 150px;
+            margin: 0;
+        }
+        
+        .exit-fullscreen {
+            background: rgba(255, 45, 123, 0.2) !important;
+            border: 1px solid var(--accent) !important;
+            color: var(--accent) !important;
+        }
+        
+        .refresh-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .refresh-controls button {
+            width: 50%;
+        }
+        
+        #stop-refresh-btn {
+            background: rgba(255, 45, 123, 0.2);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -256,13 +320,27 @@
         </div>
         
         <button id="confirm-btn" class="pulse">CONFIRM</button>
+        
+        <div class="refresh-controls">
+            <button id="start-refresh-btn">START REFRESH</button>
+            <button id="stop-refresh-btn">STOP REFRESH</button>
+        </div>
     </div>
     
     <div id="container-display" class="container-display">
         <!-- Floating containers will be added here -->
     </div>
     
+    <div class="fullscreen-controls" id="fullscreen-controls">
+        <button id="refresh-fs-btn">REFRESH</button>
+        <button id="exit-fs-btn" class="exit-fullscreen">EXIT FULLSCREEN</button>
+    </div>
+    
     <script>
+        let currentFullscreenContainer = null;
+        let refreshIntervals = [];
+        let isRefreshing = false;
+        
         document.getElementById('container-count').addEventListener('input', function() {
             const count = parseInt(this.value);
             const linkInputs = document.getElementById('link-inputs');
@@ -290,8 +368,9 @@
             const duration = parseInt(document.getElementById('refresh-duration').value);
             const containerDisplay = document.getElementById('container-display');
             
-            // Clear existing containers
+            // Clear existing containers and intervals
             containerDisplay.innerHTML = '';
+            stopAllRefresh();
             
             // Create new containers
             for (let i = 0; i < count; i++) {
@@ -300,22 +379,70 @@
                 
                 createContainer(i, urlInput.value, duration);
             }
+            
+            // Reset refresh state
+            isRefreshing = false;
+            document.getElementById('start-refresh-btn').disabled = false;
+            document.getElementById('stop-refresh-btn').disabled = true;
         });
+        
+        document.getElementById('start-refresh-btn').addEventListener('click', function() {
+            if (!isRefreshing) {
+                startAllRefresh();
+                isRefreshing = true;
+                this.disabled = true;
+                document.getElementById('stop-refresh-btn').disabled = false;
+            }
+        });
+        
+        document.getElementById('stop-refresh-btn').addEventListener('click', function() {
+            if (isRefreshing) {
+                stopAllRefresh();
+                isRefreshing = false;
+                this.disabled = true;
+                document.getElementById('start-refresh-btn').disabled = false;
+            }
+        });
+        
+        function stopAllRefresh() {
+            refreshIntervals.forEach(interval => {
+                clearInterval(interval);
+            });
+            refreshIntervals = [];
+            
+            // Update all indicators
+            document.querySelectorAll('.refresh-indicator').forEach(indicator => {
+                indicator.textContent = 'Refresh stopped';
+            });
+        }
+        
+        function startAllRefresh() {
+            const duration = parseInt(document.getElementById('refresh-duration').value);
+            
+            document.querySelectorAll('.floating-container').forEach(container => {
+                const iframe = container.querySelector('iframe');
+                const indicator = container.querySelector('.refresh-indicator');
+                
+                refreshContainer(iframe, indicator, duration);
+            });
+        }
         
         function createContainer(index, url, duration) {
             const container = document.createElement('div');
             container.className = 'floating-container';
+            container.dataset.index = index;
             container.innerHTML = `
                 <div class="container-header">
                     <div class="container-title">Container ${index+1}</div>
                     <div class="container-controls">
                         <div class="control-btn expand-btn">+</div>
+                        <div class="control-btn fullscreen-btn">⛶</div>
                         <div class="control-btn refresh-btn">↻</div>
                     </div>
                 </div>
                 <div class="container-content">
                     <iframe src="${url}"></iframe>
-                    <div class="refresh-indicator">Refreshing in ${duration}s</div>
+                    <div class="refresh-indicator">Refresh stopped</div>
                 </div>
             `;
             
@@ -326,11 +453,11 @@
             const content = container.querySelector('.container-content');
             const refreshBtn = container.querySelector('.refresh-btn');
             const expandBtn = container.querySelector('.expand-btn');
+            const fullscreenBtn = container.querySelector('.fullscreen-btn');
             const iframe = container.querySelector('iframe');
             const indicator = container.querySelector('.refresh-indicator');
             
             let isExpanded = true;
-            let refreshInterval;
             
             function toggleExpand() {
                 isExpanded = !isExpanded;
@@ -343,22 +470,56 @@
                 }
             }
             
-            function refreshContainer() {
+            function manualRefresh() {
+                const duration = parseInt(document.getElementById('refresh-duration').value);
                 iframe.src = iframe.src;
-                let timeLeft = duration;
-                indicator.textContent = `Refreshing in ${timeLeft}s`;
+                indicator.textContent = `Manually refreshed - auto refresh ${isRefreshing ? 'on' : 'off'}`;
                 
-                // Update countdown every second
-                clearInterval(refreshInterval);
-                refreshInterval = setInterval(() => {
-                    timeLeft--;
-                    indicator.textContent = `Refreshing in ${timeLeft}s`;
-                    
-                    if (timeLeft <= 0) {
-                        clearInterval(refreshInterval);
-                        refreshContainer();
-                    }
-                }, 1000);
+                if (isRefreshing) {
+                    // If auto-refresh is on, restart its timer
+                    refreshContainer(iframe, indicator, duration);
+                }
+            }
+            
+            function enterFullscreen() {
+                // Store current container
+                currentFullscreenContainer = container;
+                
+                // Apply fullscreen classes
+                container.classList.add('fullscreen');
+                content.classList.add('fullscreen');
+                
+                // Show fullscreen controls
+                document.getElementById('fullscreen-controls').style.display = 'flex';
+                
+                // Hide other containers
+                document.querySelectorAll('.floating-container').forEach(c => {
+                    if (c !== container) c.style.display = 'none';
+                });
+                
+                // Hide control panel
+                document.querySelector('.control-panel').style.display = 'none';
+            }
+            
+            function exitFullscreen() {
+                if (!currentFullscreenContainer) return;
+                
+                // Remove fullscreen classes
+                currentFullscreenContainer.classList.remove('fullscreen');
+                currentFullscreenContainer.querySelector('.container-content').classList.remove('fullscreen');
+                
+                // Hide fullscreen controls
+                document.getElementById('fullscreen-controls').style.display = 'none';
+                
+                // Show other containers
+                document.querySelectorAll('.floating-container').forEach(c => {
+                    c.style.display = '';
+                });
+                
+                // Show control panel
+                document.querySelector('.control-panel').style.display = '';
+                
+                currentFullscreenContainer = null;
             }
             
             header.addEventListener('click', toggleExpand);
@@ -367,13 +528,58 @@
                 toggleExpand();
             });
             
-            refreshBtn.addEventListener('click', (e) => {
+            fullscreenBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                refreshContainer();
+                enterFullscreen();
             });
             
-            // Start the refresh cycle
-            refreshContainer();
+            refreshBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                manualRefresh();
+            });
+            
+            // Fullscreen control buttons
+            document.getElementById('refresh-fs-btn').addEventListener('click', () => {
+                if (currentFullscreenContainer) {
+                    manualRefresh();
+                }
+            });
+            
+            document.getElementById('exit-fs-btn').addEventListener('click', exitFullscreen);
+        }
+        
+        function refreshContainer(iframe, indicator, duration) {
+            // Clear any existing interval for this container
+            const existingIndex = refreshIntervals.findIndex(interval => 
+                interval.element === iframe
+            );
+            
+            if (existingIndex !== -1) {
+                clearInterval(refreshIntervals[existingIndex].interval);
+                refreshIntervals.splice(existingIndex, 1);
+            }
+            
+            // Initial refresh
+            iframe.src = iframe.src;
+            let timeLeft = duration;
+            indicator.textContent = `Refreshing in ${timeLeft}s`;
+            
+            // Set up new interval
+            const interval = setInterval(() => {
+                timeLeft--;
+                indicator.textContent = `Refreshing in ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    iframe.src = iframe.src;
+                    timeLeft = duration;
+                }
+            }, 1000);
+            
+            // Store the interval reference
+            refreshIntervals.push({
+                interval: interval,
+                element: iframe
+            });
         }
     </script>
 </body>
