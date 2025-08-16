@@ -1,1 +1,380 @@
-xyz
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floating Containers Control Panel</title>
+    <style>
+        :root {
+            --primary: #00f7ff;
+            --secondary: #7b2dff;
+            --bg-dark: #0a0a1a;
+            --bg-light: #1a1a2e;
+            --text: #e6f1ff;
+            --accent: #ff2d7b;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(123, 45, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(0, 247, 255, 0.1) 0%, transparent 50%);
+        }
+        
+        .control-panel {
+            background: rgba(10, 10, 26, 0.8);
+            border: 1px solid var(--primary);
+            border-radius: 15px;
+            padding: 25px;
+            width: 90%;
+            max-width: 600px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 247, 255, 0.2),
+                        0 0 40px rgba(123, 45, 255, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 300;
+            text-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-light);
+            border: 1px solid rgba(0, 247, 255, 0.3);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.3);
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--bg-dark);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 247, 255, 0.4);
+        }
+        
+        .container-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .floating-container {
+            background: rgba(26, 26, 46, 0.7);
+            border: 1px solid rgba(0, 247, 255, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            width: 300px;
+            transition: all 0.5s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .container-header {
+            background: linear-gradient(90deg, rgba(0, 247, 255, 0.2), rgba(123, 45, 255, 0.2));
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .container-title {
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .container-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            background: rgba(0, 247, 255, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .control-btn:hover {
+            background: var(--primary);
+            color: var(--bg-dark);
+        }
+        
+        .container-content {
+            height: 200px;
+            transition: height 0.5s ease;
+            position: relative;
+        }
+        
+        .container-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: var(--bg-light);
+        }
+        
+        .container-content.collapsed {
+            height: 0;
+        }
+        
+        .refresh-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: var(--primary);
+        }
+        
+        .link-inputs {
+            display: none;
+            margin-top: 20px;
+            border-top: 1px solid rgba(0, 247, 255, 0.2);
+            padding-top: 20px;
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 247, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 247, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 247, 255, 0); }
+        }
+        
+        .glow {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--primary), transparent);
+            filter: blur(20px);
+            opacity: 0.3;
+            z-index: -1;
+        }
+        
+        .glow-1 {
+            top: 20%;
+            left: 10%;
+        }
+        
+        .glow-2 {
+            bottom: 10%;
+            right: 15%;
+        }
+    </style>
+</head>
+<body>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    
+    <div class="control-panel">
+        <h1>Floating Containers Control</h1>
+        
+        <div class="input-group">
+            <label for="container-count">Number of Containers</label>
+            <input type="number" id="container-count" min="1" max="10" value="3">
+        </div>
+        
+        <div class="input-group">
+            <label for="refresh-duration">Refresh Duration</label>
+            <select id="refresh-duration">
+                <option value="15">15 seconds</option>
+                <option value="30" selected>30 seconds</option>
+                <option value="50">50 seconds</option>
+                <option value="60">60 seconds</option>
+            </select>
+        </div>
+        
+        <div id="link-inputs" class="link-inputs">
+            <!-- Dynamic link inputs will be added here -->
+        </div>
+        
+        <button id="confirm-btn" class="pulse">CONFIRM</button>
+    </div>
+    
+    <div id="container-display" class="container-display">
+        <!-- Floating containers will be added here -->
+    </div>
+    
+    <script>
+        document.getElementById('container-count').addEventListener('input', function() {
+            const count = parseInt(this.value);
+            const linkInputs = document.getElementById('link-inputs');
+            
+            if (count > 0) {
+                linkInputs.style.display = 'block';
+                linkInputs.innerHTML = '';
+                
+                for (let i = 0; i < count; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'input-group';
+                    div.innerHTML = `
+                        <label for="link-${i}">Container ${i+1} URL</label>
+                        <input type="url" id="link-${i}" placeholder="https://example.com" required>
+                    `;
+                    linkInputs.appendChild(div);
+                }
+            } else {
+                linkInputs.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('confirm-btn').addEventListener('click', function() {
+            const count = parseInt(document.getElementById('container-count').value);
+            const duration = parseInt(document.getElementById('refresh-duration').value);
+            const containerDisplay = document.getElementById('container-display');
+            
+            // Clear existing containers
+            containerDisplay.innerHTML = '';
+            
+            // Create new containers
+            for (let i = 0; i < count; i++) {
+                const urlInput = document.getElementById(`link-${i}`);
+                if (!urlInput || !urlInput.value) continue;
+                
+                createContainer(i, urlInput.value, duration);
+            }
+        });
+        
+        function createContainer(index, url, duration) {
+            const container = document.createElement('div');
+            container.className = 'floating-container';
+            container.innerHTML = `
+                <div class="container-header">
+                    <div class="container-title">Container ${index+1}</div>
+                    <div class="container-controls">
+                        <div class="control-btn expand-btn">+</div>
+                        <div class="control-btn refresh-btn">↻</div>
+                    </div>
+                </div>
+                <div class="container-content">
+                    <iframe src="${url}"></iframe>
+                    <div class="refresh-indicator">Refreshing in ${duration}s</div>
+                </div>
+            `;
+            
+            document.getElementById('container-display').appendChild(container);
+            
+            // Add event listeners
+            const header = container.querySelector('.container-header');
+            const content = container.querySelector('.container-content');
+            const refreshBtn = container.querySelector('.refresh-btn');
+            const expandBtn = container.querySelector('.expand-btn');
+            const iframe = container.querySelector('iframe');
+            const indicator = container.querySelector('.refresh-indicator');
+            
+            let isExpanded = true;
+            let refreshInterval;
+            
+            function toggleExpand() {
+                isExpanded = !isExpanded;
+                if (isExpanded) {
+                    content.classList.remove('collapsed');
+                    expandBtn.textContent = '-';
+                } else {
+                    content.classList.add('collapsed');
+                    expandBtn.textContent = '+';
+                }
+            }
+            
+            function refreshContainer() {
+                iframe.src = iframe.src;
+                let timeLeft = duration;
+                indicator.textContent = `Refreshing in ${timeLeft}s`;
+                
+                // Update countdown every second
+                clearInterval(refreshInterval);
+                refreshInterval = setInterval(() => {
+                    timeLeft--;
+                    indicator.textContent = `Refreshing in ${timeLeft}s`;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(refreshInterval);
+                        refreshContainer();
+                    }
+                }, 1000);
+            }
+            
+            header.addEventListener('click', toggleExpand);
+            expandBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleExpand();
+            });
+            
+            refreshBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                refreshContainer();
+            });
+            
+            // Start the refresh cycle
+            refreshContainer();
+        }
+    </script>
+</body>
+</html>
